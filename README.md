@@ -1,2 +1,3 @@
-# LeetGPU
-Solutions of LeetGPU
+### Solutions of LeetGPU
+
+https://leetgpu.com/challenges
