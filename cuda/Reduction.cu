@@ -1,7 +1,5 @@
 // https://leetgpu.com/challenges/reduction
 
-// https://leetgpu.com/challenges/reduction
-
 #include "solve.h"
 #include <cuda_runtime.h>
 
