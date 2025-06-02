@@ -1,3 +1,5 @@
+// https://leetgpu.com/challenges/monte-carlo-integration
+
 #include "solve.h"
 #include <cuda_runtime.h>
 
