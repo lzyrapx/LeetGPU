@@ -4,6 +4,7 @@
 #include <cuda_runtime.h>
 #include <cmath>
 
+// 计算 X^T * X（Gram矩阵）
 __global__ void xtx_kernel(const float* X, float* C, int n_samples, int n_features) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     int j = blockIdx.y * blockDim.y + threadIdx.y;
@@ -19,6 +20,7 @@ __global__ void xtx_kernel(const float* X, float* C, int n_samples, int n_featur
     }
 }
 
+// 计算 X^T * y
 __global__ void xty_kernel(const float* X, const float* y, float* b, int n_samples, int n_features) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < n_features) {
@@ -30,6 +32,7 @@ __global__ void xty_kernel(const float* X, const float* y, float* b, int n_sampl
     }
 }
 
+// Cholesky 分解（将对称正定矩阵分解为 L * L^T）
 __global__ void cholesky_kernel(float* A, int n) {
     int tid = threadIdx.x;
     for (int i = 0; i < n; i++) {
@@ -54,6 +57,7 @@ __global__ void cholesky_kernel(float* A, int n) {
     }
 }
 
+// L * w = b
 __global__ void forward_substitution_kernel(const float* L, float* b, int n) {
     extern __shared__ float s_w[];
     int tid = threadIdx.x;
@@ -79,6 +83,7 @@ __global__ void forward_substitution_kernel(const float* L, float* b, int n) {
     }
 }
 
+// L^T * beta = w
 __global__ void backward_substitution_kernel(const float* L, const float* w, float* beta, int n) {
     extern __shared__ float s_beta[];
     int tid = threadIdx.x;
