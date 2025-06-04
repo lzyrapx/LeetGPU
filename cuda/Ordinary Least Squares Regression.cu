@@ -40,7 +40,7 @@ __global__ void xty_kernel(const float* X, const float* y, float* b, int n_sampl
 }
 
 // Cholesky 分解（将对称正定矩阵分解为 L * L^T）
-// A: 输入/输出矩阵（设备指针）, n: 矩阵维度
+// A: 输入/输出矩阵, n: 矩阵维度
 __global__ void cholesky_kernel(float* L, int n) {
     // 当前线程ID（在一个线程块内）
     int tid = threadIdx.x;
