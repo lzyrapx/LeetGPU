@@ -1,74 +1,85 @@
-// https://leetgpu.com/challenges/logistic-regression
-
 #include "solve.h"
 #include <iostream>
 #include <vector>
 #include <cmath>
 #include <cuda_runtime.h>
-#include <cublas_v2.h>
+#include <cstring>
 
-// sigmoid function
-__global__ void sigmoid_kernel(float *z, int n) {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < n) {
-        z[i] = 1.0f / (1.0f + expf(-z[i]));
+#define BLOCK_SIZE 256
+#define CHECK_CUDA_ERROR(val) check_cuda_error((val), #val, __FILE__, __LINE__)
+
+void check_cuda_error(cudaError_t err, const char* func, const char* file, int line) {
+    if (err != cudaSuccess) {
+        std::cerr << "CUDA error at " << file << ":" << line << " - " << func 
+                  << " failed: " << cudaGetErrorString(err) << std::endl;
+        exit(EXIT_FAILURE);
     }
 }
 
-void logistic_regression_kernel(float *d_X, float *d_y, float *d_w, 
-                                int n, int d, float learning_rate, int epochs) {
-    cublasHandle_t handle;
-    cublasCreate(&handle);
+__device__ float sigmoid(float x) {
+    return 1.0f / (1.0f + expf(-x));
+}
 
-    float alpha = 1.0f;
-    float beta = 0.0f;
-    float neg_learning_rate = -learning_rate;
-
-    float *d_pred, *d_grad;
-    cudaMalloc(&d_pred, n * sizeof(float));  // Stores predictions
-    cudaMalloc(&d_grad, d * sizeof(float));  // Stores gradient
-
-    for (int epoch = 0; epoch < epochs; epoch++) {
-        cublasSgemv(handle, CUBLAS_OP_T, n, d, &alpha, d_X, d, d_w, 1, &beta, d_pred, 1);
-
-        int blockSize = 256;
-        int numBlocks = (n + blockSize - 1) / blockSize;
-        sigmoid_kernel<<<numBlocks, blockSize>>>(d_pred, n);
-
-        float minus_one = -1.0f;
-        cublasSaxpy(handle, n, &minus_one, d_y, 1, d_pred, 1);
-
-        cublasSgemv(handle, CUBLAS_OP_N, d, n, &alpha, d_X, n, d_pred, 1, &beta, d_grad, 1);
-
-        cublasSaxpy(handle, d, &neg_learning_rate, d_grad, 1, d_w, 1);
-
-        if (epoch % 100 == 0) {
-            float loss = 0.0f;
-            cublasSnrm2(handle, n, d_pred, 1, &loss);
-            cout << "Epoch: " << epoch << " Loss: " << (loss / n) << endl;
+__global__ void logistic_regression_kernel(const float *X, const float *y, 
+                                          float *weights, float *grad, 
+                                          int n, int d) {
+    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    if (tid < n) {
+        float prediction = 0.0f;
+        for (int j = 0; j < d; j++) {
+            prediction += X[tid * d + j] * weights[j];
+        }
+        prediction = sigmoid(prediction);
+        
+        float error = prediction - y[tid];
+        
+        for (int j = 0; j < d; j++) {
+            atomicAdd(&grad[j], error * X[tid * d + j]);
         }
     }
+}
 
-    cudaFree(d_pred);
-    cudaFree(d_grad);
-    cublasDestroy(handle);
+// 更新权重
+__global__ void update_weights_kernel(float *weights, const float *grad, 
+                                    float lr, float n, int d) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < d) {
+        weights[idx] -= lr * grad[idx] / n;
+    }
 }
 
 // X, y, beta are device pointers
 // n_samples: 样本数量, n_features: 特征数量
-void solve(const float* X, const float* y, float* beta, int n_samples, int n_features) {
-    int d = n_features;
+void solve(const float* d_X, const float* d_y, float* d_beta, 
+          int n_samples, int n_features) {
     int n = n_samples;
-    const float learning_rate = 0.1f;
-    const int epochs = 1000;
+    int d = n_features;
 
-    // X shape: [n, d]
-    // y shape: [n, 1]
-    // beta shape: [d, 1]
+    const float learning_rate = 0.01f;
+    const int epochs = 100000;
 
-    cudaMalloc(&beta, d * sizeof(float));
-    // init weights to zero
-    cudaMemset(beta, 0, d * sizeof(float));
-    logistic_regression_kernel(X, y, beta, n, d, learning_rate, epochs);
-    cudaDeviceSynchronize();
+    float *d_grad;
+    CHECK_CUDA_ERROR(cudaMalloc((void**)&d_grad, d * sizeof(float)));
+
+    dim3 blockDim(BLOCK_SIZE);
+    dim3 gridDim((n + BLOCK_SIZE - 1) / BLOCK_SIZE);
+    dim3 updateGrid((d + BLOCK_SIZE - 1) / BLOCK_SIZE);
+
+    // 梯度下降循环
+    for (int iter = 0; iter < epochs; iter++) {
+        // 重置梯度
+        CHECK_CUDA_ERROR(cudaMemset(d_grad, 0, d * sizeof(float)));
+        
+        // 计算预测值和梯度
+        logistic_regression_kernel<<<gridDim, blockDim>>>(d_X, d_y, d_beta, d_grad, n, d);
+        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+        CHECK_CUDA_ERROR(cudaGetLastError());
+        
+        // 更新权重 (直接在 device 上更新，避免 host-device 拷贝)
+        update_weights_kernel<<<updateGrid, blockDim>>>(d_beta, d_grad, learning_rate, n, d);
+        CHECK_CUDA_ERROR(cudaGetLastError());
+    }
+    CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+    CHECK_CUDA_ERROR(cudaFree(d_grad));
 }
