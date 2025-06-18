@@ -1,4 +1,5 @@
-https://leetgpu.com/challenges/3d-convolution
+// https://leetgpu.com/challenges/3d-convolution
+
 #include <cstdio>
 #include <cuda_runtime.h>
 
