@@ -1,3 +1,5 @@
+// https://leetgpu.com/challenges/logistic-regression
+
 #include "solve.h"
 #include <iostream>
 #include <vector>
@@ -83,3 +85,14 @@ void solve(const float* d_X, const float* d_y, float* d_beta,
     CHECK_CUDA_ERROR(cudaDeviceSynchronize());
     CHECK_CUDA_ERROR(cudaFree(d_grad));
 }
+
+/*
+Test failed! Here are the inputs:
+X = [ 0.125  0.658  0.623 -0.802 -0.234 -0.858  0.929  0.044  0.474]
+y = [1. 0. 1.]
+n_samples = 3
+n_features = 3
+Output: [5.379146 4.29788  7.580529]
+Expected: [16.668015  21.178242   0.7341317]
+Max difference: 16.880361557006836
+*/

@@ -23,8 +23,6 @@ void solve(unsigned char* image, int width, int height) {
     // 计算需要的块数（向上取整）
     int blocksPerGrid = (width * height + threadsPerBlock - 1) / threadsPerBlock;
 
-    // 启动内核，并行处理所有像素
     invert_kernel<<<blocksPerGrid, threadsPerBlock>>>(image, width, height);
-    // 等待内核执行完成
     cudaDeviceSynchronize();
 }

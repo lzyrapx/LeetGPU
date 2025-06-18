@@ -75,22 +75,16 @@ __global__ void computeHistogramKernel(const int* input, int* histogram, int N, 
 
 void solve(const int* input, int* histogram, int N, int num_bins) {
     cudaMemset(histogram, 0, num_bins * sizeof(int));
-
-    // 动态调整执行配置
     const int block_size = 256;
     int num_blocks;
     
-    // 计算最大可用blocks（不超过GPU容量）
     cudaDeviceProp prop;
     cudaGetDeviceProperties(&prop, 0);
     int max_blocks = prop.maxGridSize[0];
     num_blocks = min(max_blocks, (N + block_size * LOAD_FACTOR - 1) / (block_size * LOAD_FACTOR));
 
-    // 启动核函数（确保共享内存分配）
     size_t shared_mem = num_bins * sizeof(int);
     computeHistogramKernel<<<num_blocks, block_size, shared_mem>>>(input, histogram, N, num_bins);
-    
-    // 错误检查
     cudaDeviceSynchronize();
 
 }

@@ -24,12 +24,10 @@ __global__ void gemm_kernel(const half* A, const half* B, half* C, int M, int N,
 
 // A, B, and C are device pointers
 void solve(const half* A, const half* B, half* C, int M, int N, int K, float alpha, float beta) {
-    // 设置线程块和网格维度
     const int BLOCK_SIZE = 16;
     dim3 block(BLOCK_SIZE, BLOCK_SIZE);
     dim3 grid((N + block.x - 1) / block.x, (M + block.y - 1) / block.y);
 
-    // 启动核函数
     gemm_kernel<<<grid, block>>>(A, B, C, M, N, K, alpha, beta);
     cudaDeviceSynchronize();
 }
