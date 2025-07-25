@@ -1,6 +1,5 @@
 // https://leetgpu.com/challenges/logistic-regression
 
-#include "solve.h"
 #include <iostream>
 #include <vector>
 #include <cmath>
@@ -53,8 +52,8 @@ __global__ void update_weights_kernel(float *weights, const float *grad,
 
 // X, y, beta are device pointers
 // n_samples: 样本数量, n_features: 特征数量
-void solve(const float* d_X, const float* d_y, float* d_beta, 
-          int n_samples, int n_features) {
+// X, y, beta are device pointers
+extern "C" void solve(const float* X, const float* y, float* beta, int n_samples, int n_features) {
     int n = n_samples;
     int d = n_features;
 
@@ -74,12 +73,12 @@ void solve(const float* d_X, const float* d_y, float* d_beta,
         CHECK_CUDA_ERROR(cudaMemset(d_grad, 0, d * sizeof(float)));
         
         // 计算预测值和梯度
-        logistic_regression_kernel<<<gridDim, blockDim>>>(d_X, d_y, d_beta, d_grad, n, d);
+        logistic_regression_kernel<<<gridDim, blockDim>>>(X, y, beta, d_grad, n, d);
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
         CHECK_CUDA_ERROR(cudaGetLastError());
         
         // 更新权重 (直接在 device 上更新，避免 host-device 拷贝)
-        update_weights_kernel<<<updateGrid, blockDim>>>(d_beta, d_grad, learning_rate, n, d);
+        update_weights_kernel<<<updateGrid, blockDim>>>(beta, d_grad, learning_rate, n, d);
         CHECK_CUDA_ERROR(cudaGetLastError());
     }
     CHECK_CUDA_ERROR(cudaDeviceSynchronize());
@@ -88,11 +87,11 @@ void solve(const float* d_X, const float* d_y, float* d_beta,
 
 /*
 Test failed! Here are the inputs:
-X = [ 0.125  0.658  0.623 -0.802 -0.234 -0.858  0.929  0.044  0.474]
-y = [1. 0. 1.]
+X = [[0.125, 0.6579999923706055, 0.6230000257492065], [-0.8019999861717224, -0.23399999737739563, -0.8579999804496765], [0.9290000200271606, 0.04399999976158142, 0.4740000069141388]]
+y = [1.0, 0.0, 1.0]
 n_samples = 3
 n_features = 3
-Output: [5.379146 4.29788  7.580529]
-Expected: [16.668015  21.178242   0.7341317]
-Max difference: 16.880361557006836
+Mismatch in 'beta'
+Expected: [7.599221229553223, 6.970425128936768, 9.579840660095215]
+Got: [4.2254252433776855, 3.331865072250366, 5.195430278778076]
 */
