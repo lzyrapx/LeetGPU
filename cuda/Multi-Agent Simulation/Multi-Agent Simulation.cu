@@ -1,9 +1,8 @@
-// https://leetgpu.com/challenges/swarm-intelligence-flocking-simulation
+// https://leetgpu.com/challenges/multi-agent-simulation
 
-#include "solve.h"
 #include <cuda_runtime.h>
 
-__global__ void updateAgentsKernel(const float* agents, float* agents_next, int N) {
+__global__ void update_agents_kernel(const float* agents, float* agents_next, int N) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= N) return;
 
@@ -25,7 +24,7 @@ __global__ void updateAgentsKernel(const float* agents, float* agents_next, int 
         float dy = y_i - y_j;
         float dist_sq = dx * dx + dy * dy;
 
-        if (dist_sq < 25.0f) { // Check if distance < 5.0 (r^2 = 25)
+        if (dist_sq < 25.0f) {  // Check if distance < 5.0 (r^2 = 25)
             sum_vx += agents[4 * j + 2];
             sum_vy += agents[4 * j + 3];
             ++count;
@@ -49,7 +48,8 @@ __global__ void updateAgentsKernel(const float* agents, float* agents_next, int 
     agents_next[4 * i + 3] = new_vy;        // new_vy
 }
 
-void solve(const float* agents, float* agents_next, int N) {
+// agents, agents_next are device pointers
+extern "C" void solve(const float* agents, float* agents_next, int N) {
     float *d_agents, *d_agents_next;
     cudaMalloc(&d_agents, 4 * N * sizeof(float));
     cudaMalloc(&d_agents_next, 4 * N * sizeof(float));
@@ -58,7 +58,7 @@ void solve(const float* agents, float* agents_next, int N) {
 
     int block_size = 256;
     int grid_size = (N + block_size - 1) / block_size;
-    updateAgentsKernel<<<grid_size, block_size>>>(d_agents, d_agents_next, N);
+    update_agents_kernel<<<grid_size, block_size>>>(d_agents, d_agents_next, N);
 
     cudaMemcpy(agents_next, d_agents_next, 4 * N * sizeof(float), cudaMemcpyDeviceToHost);
 
