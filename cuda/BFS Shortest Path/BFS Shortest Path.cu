@@ -11,6 +11,7 @@ __global__ void bfs_kernel(const int* input_grid, int* distances, int rows, int 
     int row = node / cols;
     int col = node % cols;
 
+    // direction
     int dr[] = {1, -1, 0, 0};
     int dc[] = {0, 0, 1, -1};
 
@@ -19,9 +20,14 @@ __global__ void bfs_kernel(const int* input_grid, int* distances, int rows, int 
         int c = col + dc[d];
         if (r >= 0 && r < rows && c >= 0 && c < cols) {
             int index = r * cols + c;
-            if (input_grid[index] == 0) {
+            if (input_grid[index] == 0) {  // free ceil
                 int expected = -1;
+                // atomic compare and swap
+                // if distances[index] == -1, then expected = current_level + 1 and will return distances[index]'s old value
                 if (atomicCAS(&distances[index], expected, current_level + 1) == -1) {
+                    // same as:
+                    // pos = next_size
+                    // next_size += 1
                     int pos = atomicAdd(next_size, 1);
                     next_frontier[pos] = index;
                 }
@@ -46,8 +52,8 @@ extern "C" void solve(const int* grid, int* result, int rows, int cols,
     cudaMalloc(&distances, rows * cols * sizeof(int));
     cudaMemset(distances, -1, rows * cols * sizeof(int));
 
-    cudaMalloc(&frontier1, rows * cols * sizeof(int));
-    cudaMalloc(&frontier2, rows * cols * sizeof(int));
+    cudaMalloc(&frontier1, rows * cols * sizeof(int));  // current frontier
+    cudaMalloc(&frontier2, rows * cols * sizeof(int));  // next frontier
     cudaMalloc(&d_next_size, sizeof(int));
 
     int start_index = start_row * cols + start_col;
@@ -65,6 +71,7 @@ extern "C" void solve(const int* grid, int* result, int rows, int cols,
     int answer = -1;
 
     while (current_size > 0) {
+        // reset next size
         cudaMemset(d_next_size, 0, sizeof(int));
 
         dim3 block(256);
@@ -72,6 +79,7 @@ extern "C" void solve(const int* grid, int* result, int rows, int cols,
         bfs_kernel<<<grid_dim, block>>>(grid, distances, rows, cols, current_frontier, current_size, next_frontier, d_next_size, level);
         cudaDeviceSynchronize();
 
+        // check if found
         int end_distance;
         cudaMemcpy(&end_distance, &distances[end_index], sizeof(int), cudaMemcpyDeviceToHost);
         if (end_distance != -1) {
@@ -79,9 +87,14 @@ extern "C" void solve(const int* grid, int* result, int rows, int cols,
             found = 1;
             break;
         }
-
+        
         int next_size_val;
         cudaMemcpy(&next_size_val, d_next_size, sizeof(int), cudaMemcpyDeviceToHost);
+        if (next_size_val == 0) {
+            // no free ceil
+            break;
+        }
+        // next frontier become current frontier
         std::swap(current_frontier, next_frontier);
         current_size = next_size_val;
         level++;
