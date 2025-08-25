@@ -24,7 +24,8 @@ __global__ void bfs_kernel(const int* input_grid, int* distances, int rows, int 
                 int expected = -1;
                 // atomic compare and swap
                 // if distances[index] == -1, then expected = current_level + 1 and will return distances[index]'s old value
-                if (atomicCAS(&distances[index], expected, current_level + 1) == -1) {
+                int old = atomicCAS(&distances[index], expected, current_level + 1);
+                if (old == -1) {
                     // same as:
                     // pos = next_size
                     // next_size += 1
@@ -36,6 +37,7 @@ __global__ void bfs_kernel(const int* input_grid, int* distances, int rows, int 
     }
 }
 
+// grid, result are device pointers
 extern "C" void solve(const int* grid, int* result, int rows, int cols, 
                      int start_row, int start_col, int end_row, int end_col) {
     if (start_row == end_row && start_col == end_col) {
