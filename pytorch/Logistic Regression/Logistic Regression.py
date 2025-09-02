@@ -2,7 +2,7 @@ import torch
 
 def solve(X: torch.Tensor, y: torch.Tensor, beta: torch.Tensor, n_samples: int, n_features: int):
     beta.zero_()
-    max_iter = 1000
+    max_iter = 500
     tol = 1e-8
     l2_reg = 1e-6
     
@@ -17,10 +17,7 @@ def solve(X: torch.Tensor, y: torch.Tensor, beta: torch.Tensor, n_samples: int, 
         XW = X * W.unsqueeze(1)
         hessian = X.t() @ XW + l2_reg * torch.eye(n_features, device=X.device, dtype=X.dtype)
         
-        try:
-            delta = torch.linalg.solve(hessian, gradient)
-        except:
-            delta = torch.linalg.lstsq(hessian, gradient.unsqueeze(1)).solution.squeeze()
+        delta = torch.linalg.solve(hessian, gradient)   
         
         beta_new = beta - delta
         if torch.norm(beta_new - beta) < tol:
