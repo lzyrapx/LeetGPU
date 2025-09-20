@@ -63,7 +63,7 @@ __global__ void softmax_kernel(float* attn_scores, int M, int N) {
 }
 
 __global__ void output_kernel(const float* attn_weights, const float* V,
-                        loat* output, int M, int N, int d) {
+                        float* output, int M, int N, int d) {
     int row = blockIdx.y * blockDim.y + threadIdx.y;
     int col = blockIdx.x * blockDim.x + threadIdx.x;
     if (row < M && col < d) {
