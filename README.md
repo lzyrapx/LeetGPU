@@ -1,6 +1,6 @@
 # 🚀 LeetGPU Solutions & Progress Tracker
 
-🔗 **Profile:**[lzyrapx on LeetGPU](https://leetgpu.com/profile?display_name=lzyrapx) | 🎯 **Challenges:** [LeetGPU Challenges](https://leetgpu.com/challenges)
+🔗 **Profile:**[lzyrapx on LeetGPU](https://leetgpu.com/lzyrapx) | 🎯 **Challenges:** [LeetGPU Challenges](https://leetgpu.com/challenges)
 
 > **Progress Summary:** Actively conquering GPU programming challenges across multiple frameworks. Currently focusing heavily on **CUDA** and **PyTorch**, with ongoing explorations into modern compilers and languages like **Triton**, **Mojo**, and **TinyGrad**.
 
