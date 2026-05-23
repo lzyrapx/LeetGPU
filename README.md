@@ -38,7 +38,7 @@
 | [LoRA Linear](cuda/LoRA%20Linear) | ✅ | | | | | |
 | [Mean Squared Error](cuda/Mean%20Squared%20Error) | ✅ | ✅ | | | | |
 | [Multi-Head Self-Attention](cuda/Multi-Head%20Self-Attention) | ✅ | | | | | |
-| [ReLU Activation](cuda/ReLU%20Activation) | ✅ | ✅ | | ✅ | | |
+| [ReLU](cuda/ReLU) | ✅ | ✅ | | ✅ | | |
 | [RMS Normalization](cuda/RMS%20Normalization) | ✅ | | | | | |
 | [Rotary Positional Embedding](cuda/Rotary%20Positional%20Embedding) | ✅ | | | | | |
 |[Sigmoid Activation](cuda/Sigmoid%20Activation) | ✅ | | | | | |

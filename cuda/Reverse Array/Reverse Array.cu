@@ -1,6 +1,3 @@
-// https://leetgpu.com/challenges/reverse-array
-
-#include "solve.h"
 #include <cuda_runtime.h>
 
 __global__ void reverse_array(float* input, int N) {
@@ -14,7 +11,7 @@ __global__ void reverse_array(float* input, int N) {
 }
 
 // input is device pointer
-void solve(float* input, int N) {
+extern "C" void solve(float* input, int N) {
     int threadsPerBlock = 256;
     int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
 
