@@ -11,7 +11,7 @@
 
 | Problems | CUDA | PyTorch | Triton | Mojo | TinyGrad | Cute DSL |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-|[Batched Matrix Multiplication](cuda/Batched%20Matrix%20Multiplication%20(FP32)) | ✅ | ✅ | | | | |
+|[Batched Matrix Multiplication](cuda/Batched%20Matrix%20Multiplication) | ✅ | ✅ | | | | |
 | [Dot Product](cuda/Dot%20Product) | ✅ | ✅ | | | | |
 | [FP16 Batched Matrix Multiplication](cuda/FP16%20Batched%20Matrix%20Multiplication) | ✅ | | | | | |
 | [FP16 Dot Product](cuda/FP16%20Dot%20Product) | ✅ | | | | | |

@@ -1,6 +1,3 @@
-// https://leetgpu.com/challenges/batched-matrix-multiplication-fp32
-
-#include "solve.h"
 #include <cuda_runtime.h>
 
 __global__ void batched_matmul_kernel(const float* A, const float* B, float* C, int BATCH, int M, int N, int K) {
@@ -17,20 +14,21 @@ __global__ void batched_matmul_kernel(const float* A, const float* B, float* C, 
     const float* B_b = B + batch * K * N;
 
     float sum = 0.0f;
-    for (int k = 0; k < K; ++k) {
+    for (int k = 0; k < K; k++) {
         sum += A_b[i * K + k] * B_b[k * N + j];
     }
 
     C[batch * M * N + i * N + j] = sum;
 }
 
-void solve(const float* A, const float* B, float* C, int BATCH, int M, int N, int K) {
-    int totalElements = BATCH * M * N;
-    if (totalElements == 0) return;
+// A, B, C are device pointers
+extern "C" void solve(const float* A, const float* B, float* C, int BATCH, int M, int N, int K) {
+    int total_elements = BATCH * M * N;
+    if (total_elements == 0) return;
 
-    int threadsPerBlock = 256;
-    int blocksPerGrid = (totalElements + threadsPerBlock - 1) / threadsPerBlock;
+    int threads_per_block = 256;
+    int blocks_per_grid = (total_elements + threads_per_block - 1) / threads_per_block;
 
-    batched_matmul_kernel<<<blocksPerGrid, threadsPerBlock>>>(A, B, C, BATCH, M, N, K);
+    batched_matmul_kernel<<<blocks_per_grid, threads_per_block>>>(A, B, C, BATCH, M, N, K);
     cudaDeviceSynchronize();
 }
