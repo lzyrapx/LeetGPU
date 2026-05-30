@@ -11,7 +11,7 @@
 
 | Problems | CUDA | PyTorch | Triton | Mojo | TinyGrad | Cute DSL |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-|[Batched Matrix Multiplication](cuda/Batched%20Matrix%20Multiplication) | ✅ | ✅ | | | | |
+| [Batched Matrix Multiplication](cuda/Batched%20Matrix%20Multiplication) | ✅ | ✅ | | | | |
 | [Dot Product](cuda/Dot%20Product) | ✅ | ✅ | | | | |
 | [FP16 Batched Matrix Multiplication](cuda/FP16%20Batched%20Matrix%20Multiplication) | ✅ | | | | | |
 | [FP16 Dot Product](cuda/FP16%20Dot%20Product) | ✅ | | | | | |
@@ -31,7 +31,7 @@
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | [Attention with Linear Biases](cuda/Attention%20with%20Linear%20Biases) | ✅ | | | | | |
 | [Batch Normalization](cuda/Batch%20Normalization) | ✅ | | | | | |
-| [Categorical Cross-Entropy Loss](cuda/Categorical%20Cross-Entropy%20Loss) | ✅ | ✅ | | | | |
+| [Categorical Cross Entropy Loss](cuda/Categorical%20Cross%20Entropy%20Loss) | ✅ | ✅ | | | | |
 | [Gaussian Error Gated Linear Unit](cuda/Gaussian%20Error%20Gated%20Linear%20Unit) | ✅ | | | | | |
 | [Leaky ReLU](cuda/Leaky%20ReLU) | ✅ | ✅ | | ✅ | | |
 | [Linear Self-Attention](cuda/Linear%20Self-Attention) | ✅ | | | | | |
