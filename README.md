@@ -15,7 +15,7 @@
 | [Dot Product](cuda/Dot%20Product) | ✅ | ✅ | | | | |
 | [FP16 Batched Matrix Multiplication](cuda/FP16%20Batched%20Matrix%20Multiplication) | ✅ | | | | | |
 | [FP16 Dot Product](cuda/FP16%20Dot%20Product) | ✅ | | | | | |
-| [GEMM (FP16)](cuda/GEMM%20(FP16)) | ✅ | ✅ | | | | |
+| [General Matrix Multiplication (GEMM)](cuda/General%20Matrix%20Multiplication%20(GEMM)) | ✅ | ✅ | | | | |
 | [INT8 Quantized MatMul](cuda/Quantized%20Matrix%20Multiplication%20(INT8)) | ✅ | ✅ | | | | |
 | [Matrix Addition](cuda/Matrix%20Addition) | ✅ | | | | | |
 | [Matrix Copy](cuda/Matrix%20Copy) | ✅ | ✅ | | ✅ | | |

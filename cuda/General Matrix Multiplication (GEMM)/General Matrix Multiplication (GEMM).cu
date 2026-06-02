@@ -1,9 +1,7 @@
-#include "solve.h"
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
 
 __global__ void gemm_kernel(const half* A, const half* B, half* C, int M, int N, int K, float alpha, float beta) {
-    // 计算当前线程处理的矩阵位置
     int row = blockIdx.y * blockDim.y + threadIdx.y;
     int col = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -23,7 +21,8 @@ __global__ void gemm_kernel(const half* A, const half* B, half* C, int M, int N,
 }
 
 // A, B, and C are device pointers
-void solve(const half* A, const half* B, half* C, int M, int N, int K, float alpha, float beta) {
+extern "C" void solve(const half* A, const half* B, half* C, int M, int N, int K, float alpha,
+                      float beta) {
     const int BLOCK_SIZE = 16;
     dim3 block(BLOCK_SIZE, BLOCK_SIZE);
     dim3 grid((N + block.x - 1) / block.x, (M + block.y - 1) / block.y);
