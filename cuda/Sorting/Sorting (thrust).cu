@@ -1,6 +1,4 @@
-// https://leetgpu.com/challenges/sorting
-
-#include "solve.h"
+#include <cuda_runtime.h>
 #include <thrust/sort.h>
 #include <thrust/device_ptr.h>
 

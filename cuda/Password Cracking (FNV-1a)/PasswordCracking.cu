@@ -1,6 +1,3 @@
-// https://leetgpu.com/challenges/password-cracking-fnv-1a
-
-#include "solve.h"
 #include <cuda_runtime.h>
 
 // FNV-1a hash function that takes a byte array and its length as input

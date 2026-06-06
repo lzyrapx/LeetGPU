@@ -1,11 +1,8 @@
-// https://leetgpu.com/challenges/top-k-selection
-
-#include "solve.h"
 #include <cuda_runtime.h>
 #include <cub/cub.cuh>
 
 // input, output are device pointers
-void solve(const float* input, float* output, int N, int k) {
+extern "C" void solve(const float* input, float* output, int N, int k) {
     float *d_temp_storage = nullptr;
     size_t temp_storage_bytes = 0;
     float *d_sorted;
