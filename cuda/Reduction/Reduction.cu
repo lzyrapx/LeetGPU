@@ -1,6 +1,3 @@
-// https://leetgpu.com/challenges/reduction
-
-#include "solve.h"
 #include <cuda_runtime.h>
 
 // 并行归约求和
