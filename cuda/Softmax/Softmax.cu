@@ -1,6 +1,3 @@
-// https://leetgpu.com/challenges/softmax
-
-#include "solve.h"
 #include <cuda_runtime.h>
 
 __global__ void softmax_kernel(const float* input, float* output, int N) {
@@ -30,7 +27,7 @@ __global__ void softmax_kernel(const float* input, float* output, int N) {
 }
 
 // input, output are device pointers (i.e. pointers to memory on the GPU)
-void solve(const float* input, float* output, int N) {
+extern "C" void solve(const float* input, float* output, int N) {
     int threadsPerBlock = 256;
     int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
 
