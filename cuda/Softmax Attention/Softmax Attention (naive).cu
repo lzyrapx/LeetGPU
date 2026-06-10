@@ -1,25 +1,22 @@
-
-https://leetgpu.com/challenges/softmax-attention
-
-#include "solve.h"
 #include <cuda_runtime.h>
 #include <math.h>
 
-// 调整核函数参数，正确计算M×N的矩阵。每个线程处理Q的第i行和K的第j行的点积。
+// 计算 Q * K^T / sqrt(d)
+// 每个线程处理 Q 的第 i 行和 K 的第 j 行的点积。
 __global__ void qkt_kernel(const float* Q, const float* K, float* S, int M, int N, int d) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     int j = blockIdx.y * blockDim.y + threadIdx.y;
     if (i >= M || j >= N) return;
 
     float sum = 0.0f;
-    for (int k = 0; k < d; ++k) {
+    for (int k = 0; k < d; k++) {
         sum += Q[i * d + k] * K[j * d + k]; // Q[i] · K[j]
     }
     sum /= sqrtf(d);
     S[i * N + j] = sum;
 }
 
-// 处理每行的N个元素，确保正确应用行方向的softmax
+// 应用行方向的 softmax
 __global__ void softmax_kernel(const float* S, float* P, int M, int N) {
     int row = blockIdx.x;
     if (row >= M) return;
@@ -46,7 +43,7 @@ __global__ void softmax_kernel(const float* S, float* P, int M, int N) {
     }
     float row_max = shared_max[0];
 
-    // 计算exp和总和
+    // 计算 exp 和总和
     float sum_exp = 0.0f;
     for (int j = tid; j < N; j += num_threads) {
         float exp_val = expf(S[row * N + j] - row_max);
@@ -73,20 +70,23 @@ __global__ void softmax_kernel(const float* S, float* P, int M, int N) {
     }
 }
 
-// 遍历N次循环，确保P与V的正确矩阵乘法
+// 计算 P * V
 __global__ void pv_kernel(const float* P, const float* V, float* output, int M, int N, int d) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     int k = blockIdx.y * blockDim.y + threadIdx.y;
     if (i >= M || k >= d) return;
 
     float sum = 0.0f;
-    for (int j = 0; j < N; ++j) {
+    for (int j = 0; j < N; j++) {
         sum += P[i * N + j] * V[j * d + k];
     }
     output[i * d + k] = sum;
 }
 
-void solve(const float* Q, const float* K, const float* V, float* output, int M, int N, int d) {
+
+// Q, K, V, output are device pointers
+extern "C" void solve(const float* Q, const float* K, const float* V, float* output, int M, int N,
+                      int d) {
     float *S, *P;
     cudaMalloc(&S, M * N * sizeof(float));
     cudaMalloc(&P, M * N * sizeof(float));
@@ -97,7 +97,7 @@ void solve(const float* Q, const float* K, const float* V, float* output, int M,
     qkt_kernel<<<grid_qkt, block_qkt>>>(Q, K, S, M, N, d);
     cudaDeviceSynchronize();
 
-    // 应用 softmax
+    // 计算 softmax
     softmax_kernel<<<M, 256>>>(S, P, M, N);
     cudaDeviceSynchronize();
 

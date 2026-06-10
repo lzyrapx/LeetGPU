@@ -1,9 +1,6 @@
-// https://leetgpu.com/challenges/matrix-power
-
-#include "solve.h"
 #include <cuda_runtime.h>
 
-__global__ void identityKernel(float *mat, int N) {
+__global__ void identity_kernel(float *mat, int N) {
     int row = blockIdx.y * blockDim.y + threadIdx.y;
     int col = blockIdx.x * blockDim.x + threadIdx.x;
     if (row < N && col < N) {
@@ -11,7 +8,7 @@ __global__ void identityKernel(float *mat, int N) {
     }
 }
 
-__global__ void matrixMultiplyKernel(const float *A, const float *B, float *C, int N) {
+__global__ void matrix_multiply_kernel(const float *A, const float *B, float *C, int N) {
     int row = blockIdx.y * blockDim.y + threadIdx.y;
     int col = blockIdx.x * blockDim.x + threadIdx.x;
     if (row < N && col < N) {
@@ -23,15 +20,15 @@ __global__ void matrixMultiplyKernel(const float *A, const float *B, float *C, i
     }
 }
 
-void solve(const float* input, float* output, int N, int P) {
+// input, output are device pointers
+extern "C" void solve(const float* input, float* output, int N, int P) {
     if (P == 0) {
         dim3 threads(16, 16);
         dim3 blocks((N + 15) / 16, (N + 15) / 16);
-        identityKernel<<<blocks, threads>>>(output, N);
+        identity_kernel<<<blocks, threads>>>(output, N);
         cudaDeviceSynchronize();
         return;
     }
-
     if (P == 1) {
         cudaMemcpy(output, input, N * N * sizeof(float), cudaMemcpyDeviceToDevice);
         return;
@@ -45,7 +42,7 @@ void solve(const float* input, float* output, int N, int P) {
     dim3 threads(16, 16);
     dim3 blocks((N + 15) / 16, (N + 15) / 16);
 
-    identityKernel<<<blocks, threads>>>(d_buf1, N);
+    identity_kernel<<<blocks, threads>>>(d_buf1, N);
     cudaMemcpy(d_buf2, input, N * N * sizeof(float), cudaMemcpyDeviceToDevice);
     cudaDeviceSynchronize();
 
@@ -53,18 +50,18 @@ void solve(const float* input, float* output, int N, int P) {
     float *d_base = d_buf2;
     float *d_temp = d_buf3;
 
-    int exponent = P;
-    while (exponent) {
-        if (exponent & 1) {
-            matrixMultiplyKernel<<<blocks, threads>>>(d_result, d_base, d_temp, N);
+    int exp = P;
+    while (exp) {
+        if (exp & 1) {
+            matrix_multiply_kernel<<<blocks, threads>>>(d_result, d_base, d_temp, N);
             cudaDeviceSynchronize();
             float *tmp = d_result;
             d_result = d_temp;
             d_temp = tmp;
         }
-        exponent >>= 1;
-        if (exponent) {
-            matrixMultiplyKernel<<<blocks, threads>>>(d_base, d_base, d_temp, N);
+        exp >>= 1;
+        if (exp) {
+            matrix_multiply_kernel<<<blocks, threads>>>(d_base, d_base, d_temp, N);
             cudaDeviceSynchronize();
             float *tmp = d_base;
             d_base = d_temp;

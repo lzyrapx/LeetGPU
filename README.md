@@ -37,7 +37,7 @@
 | [Linear Self-Attention](cuda/Linear%20Self-Attention) | ✅ | | | | | |
 | [LoRA Linear](cuda/LoRA%20Linear) | ✅ | | | | | |
 | [Mean Squared Error](cuda/Mean%20Squared%20Error) | ✅ | ✅ | | | | |
-| [Multi-Head Self-Attention](cuda/Multi-Head%20Self-Attention) | ✅ | | | | | |
+| [Multi-Head Attention](cuda/Multi-Head%20Attention) | ✅ | | | | | |
 | [ReLU](cuda/ReLU) | ✅ | ✅ | | ✅ | | |
 | [RMS Normalization](cuda/RMS%20Normalization) | ✅ | | | | | |
 | [Rotary Positional Embedding](cuda/Rotary%20Positional%20Embedding) | ✅ | | | | | |

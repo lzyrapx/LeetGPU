@@ -1,16 +1,13 @@
-// https://leetgpu.com/challenges/ordinary-least-squares-regression
 
-#include "solve.h"
 #include <cuda_runtime.h>
 #include <cmath>
 
 // 计算 X^T * X（Gram矩阵）
 __global__ void xtx_kernel(const float* X, float* C, int n_samples, int n_features) {
-    // 计算当前线程处理的矩阵元素坐标(i, j)
+    // 当前线程处理的矩阵元素坐标(i, j)
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     int j = blockIdx.y * blockDim.y + threadIdx.y;
 
-    // 检查坐标是否在有效范围内
     if (i < n_features && j < n_features) {
         float sum = 0.0f;
         // 计算 X 的第 i 列和 X 的第 j 列的点积
@@ -19,14 +16,14 @@ __global__ void xtx_kernel(const float* X, float* C, int n_samples, int n_featur
             float xj = X[k * n_features + j];  // 第 k 行，第 j 列元素
             sum += xi * xj;  // 累加点积
         }
-        // 将计算结果存储到 Gram 矩阵的(i,j)位置
+        // 结果存储到 Gram 矩阵的(i,j)位置
         C[i * n_features + j] = sum;
     }
 }
 
 // 计算 X^T * y
 __global__ void xty_kernel(const float* X, const float* y, float* b, int n_samples, int n_features) {
-    // 计算当前线程处理的特征索引
+    // 当前线程处理的特征索引
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < n_features) {
         float sum = 0.0f;
@@ -34,7 +31,7 @@ __global__ void xty_kernel(const float* X, const float* y, float* b, int n_sampl
         for (int k = 0; k < n_samples; k++) {
             sum += X[k * n_features + i] * y[k];  // 累加点积
         }
-        // 将计算结果存储到输出向量的第 i 个位置
+        // 结果存储到输出向量的第 i 个位置
         b[i] = sum;
     }
 }
@@ -138,10 +135,10 @@ __global__ void backward_substitution_kernel(const float* L, const float* w, flo
     }
 }
 
-// X, y, beta are device pointers
 // n_samples: 样本数量, n_features: 特征数量
-void solve(const float* X, const float* y, float* beta, int n_samples, int n_features) {
-    // 处理特征数为 0 的特殊情况
+// X, y, beta are device pointers
+extern "C" void solve(const float* X, const float* y, float* beta, int n_samples, int n_features) {
+    // 特征数为 0 的特殊情况
     if (n_features == 0) {
         return;
     }
