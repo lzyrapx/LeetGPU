@@ -1,9 +1,6 @@
-// https://leetgpu.com/challenges/dot-product
-
-#include "solve.h"
 #include <cuda_runtime.h>
 
-__global__ void dotProductKernel(const float* A, const float* B, float* tmp, int N) {
+__global__ void dot_product_kernel(const float* A, const float* B, float* tmp, int N) {
     extern __shared__ float sdata[];
     int tid = threadIdx.x;
     int i = blockIdx.x * blockDim.x + tid;
@@ -24,7 +21,7 @@ __global__ void dotProductKernel(const float* A, const float* B, float* tmp, int
     }
 }
 
-__global__ void sumKernel(const float* tmp, float* result, int numBlocks) {
+__global__ void sum_kernel(const float* tmp, float* result, int numBlocks) {
     extern __shared__ float sdata[];
     int tid = threadIdx.x;
     sdata[tid] = 0.0f;
@@ -49,7 +46,7 @@ __global__ void sumKernel(const float* tmp, float* result, int numBlocks) {
 }
 
 // A, B, result are device pointers
-void solve(const float* A, const float* B, float* result, int N) {
+extern "C" void solve(const float* A, const float* B, float* result, int N) {
     const int threadsPerBlock = 256;
     int numBlocks = (N + threadsPerBlock - 1) / threadsPerBlock;
 
@@ -57,11 +54,11 @@ void solve(const float* A, const float* B, float* result, int N) {
     cudaMalloc(&tmp, numBlocks * sizeof(float));
 
     // Launch first kernel to compute partial sums
-    dotProductKernel<<<numBlocks, threadsPerBlock, threadsPerBlock * sizeof(float)>>>(A, B, tmp, N);
+    dot_product_kernel<<<numBlocks, threadsPerBlock, threadsPerBlock * sizeof(float)>>>(A, B, tmp, N);
 
     // Launch second kernel to sum all partial sums
     const int sumThreads = 256;
-    sumKernel<<<1, sumThreads, sumThreads * sizeof(float)>>>(tmp, result, numBlocks);
+    sum_kernel<<<1, sumThreads, sumThreads * sizeof(float)>>>(tmp, result, numBlocks);
 
     cudaDeviceSynchronize();
     cudaFree(tmp);
