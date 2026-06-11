@@ -1,11 +1,6 @@
-// https://leetgpu.com/challenges/mean-squared-error
-
-#include "solve.h"
 #include <cuda_runtime.h>
 
-const int BLOCK_SIZE = 256;
-
-__global__ void computeSquaredDiffAndReduce(const float* predictions, const float* targets, float* partial_sums, int N) {
+__global__ void squared_diff_and_reduce(const float* predictions, const float* targets, float* partial_sums, int N) {
     extern __shared__ float sdata[];
 
     int tid = threadIdx.x;
@@ -30,7 +25,7 @@ __global__ void computeSquaredDiffAndReduce(const float* predictions, const floa
     }
 }
 
-__global__ void reduceSum(float* input, float* output, int numElements) {
+__global__ void reduce_sum(float* input, float* output, int numElements) {
     extern __shared__ float sdata[];
 
     int tid = threadIdx.x;
@@ -51,29 +46,31 @@ __global__ void reduceSum(float* input, float* output, int numElements) {
     }
 }
 
-__global__ void computeMSE(float* sum, float* mse, int N) {
+__global__ void compute_mse(float* sum, float* mse, int N) {
     *mse = *sum / N;
 }
 
-void solve(const float* predictions, const float* targets, float* mse, int N) {
+// predictions, targets, mse are device pointers
+extern "C" void solve(const float* predictions, const float* targets, float* mse, int N) {
+    const int BLOCK_SIZE = 256;
     int gridSize = (N + BLOCK_SIZE - 1) / BLOCK_SIZE;
     float* d_partial_sums;
     cudaMalloc(&d_partial_sums, gridSize * sizeof(float));
 
-    computeSquaredDiffAndReduce<<<gridSize, BLOCK_SIZE, BLOCK_SIZE * sizeof(float)>>>(predictions, targets, d_partial_sums, N);
+    squared_diff_and_reduce<<<gridSize, BLOCK_SIZE, BLOCK_SIZE * sizeof(float)>>>(predictions, targets, d_partial_sums, N);
 
-    int currentSize = gridSize;
-    float* currentInput = d_partial_sums;
-    while (currentSize > 1) {
-        gridSize = (currentSize + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    int curSize = gridSize;
+    float* curInput = d_partial_sums;
+    while (curSize > 1) {
+        gridSize = (curSize + BLOCK_SIZE - 1) / BLOCK_SIZE;
         float* d_output;
         cudaMalloc(&d_output, gridSize * sizeof(float));
-        reduceSum<<<gridSize, BLOCK_SIZE, BLOCK_SIZE * sizeof(float)>>>(currentInput, d_output, currentSize);
-        cudaFree(currentInput);
-        currentInput = d_output;
-        currentSize = gridSize;
+        reduce_sum<<<gridSize, BLOCK_SIZE, BLOCK_SIZE * sizeof(float)>>>(curInput, d_output, curSize);
+        cudaFree(curInput);
+        curInput = d_output;
+        curSize = gridSize;
     }
 
-    computeMSE<<<1, 1>>>(currentInput, mse, N);
-    cudaFree(currentInput);
+    compute_mse<<<1, 1>>>(curInput, mse, N);
+    cudaFree(curInput);
 }

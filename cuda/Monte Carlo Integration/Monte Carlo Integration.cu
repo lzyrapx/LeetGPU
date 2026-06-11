@@ -1,6 +1,3 @@
-// https://leetgpu.com/challenges/monte-carlo-integration
-
-#include "solve.h"
 #include <cuda_runtime.h>
 
 // 计算样本总和（使用并行归约）
@@ -43,7 +40,8 @@ __global__ void result_kernel(float* result, const float* total_sum, float inter
     *result = interval * avg;
 }
 
-void solve(const float* y_samples, float* result, float a, float b, int n_samples) {
+// y_samples, result are device pointers
+extern "C" void solve(const float* y_samples, float* result, float a, float b, int n_samples) {
     float interval = b - a;  // 积分区间长度
     
     float* d_sum;
